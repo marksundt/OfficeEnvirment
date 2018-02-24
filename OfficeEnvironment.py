@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 # http://wiki.sunfounder.cc/index.php?title=OLED-SSD1306_Module
 # https://learn.adafruit.com/ssd1306-oled-displays-with-raspberry-pi-and-beaglebone-black/usage
+# GPIO Zero http://gpiozero.readthedocs.io/en/stable/installing.html
+#https://github.com/adafruit/Adafruit_Python_DHT/blob/master/examples/AdafruitDHT.py
+# https://github.com/TonyLHansen/raspberry-pi-safe-off-switch/
+# https://github.com/pimoroni/enviro-phat
 # Crontab - @reboot python /home/pi/python/PlantTelemetry.py &
-# scp PlantTelemetry.py pi@192.168.0.23:/home/pi/python/
-import sys
+# scp OfficeEnvironment.py pi@192.168.0.33:/home/pi/python/
+# 
+import os, sys
 import time
 import Adafruit_DHT
 import datetime
@@ -49,6 +54,10 @@ x = 0
 # Load default font.
 font = ImageFont.load_default()
 
+offGPIO = int(sys.argv[1]) if len(sys.argv) >= 2 else 21
+holdTime = int(sys.argv[2]) if len(sys.argv) >= 3 else 6
+
+
 def write(line):
     sys.stdout.write(line)
     sys.stdout.flush()
@@ -59,6 +68,7 @@ def disp_stats():
     analog_values = analog.read_all()
     mag_values = motion.magnetometer()
     acc_values = [round(x,2) for x in motion.accelerometer()]
+    # DHT Type 11, Pin 17 (Line 41 Github)
     humidity, temp2 = Adafruit_DHT.read_retry(11, 17)
     currentDT = datetime.datetime.now()
 
@@ -141,6 +151,9 @@ def main():
             disp_OLED()
             time.sleep(10)
     except (KeyboardInterrupt, SystemExit):
+        # Clear display.
+        disp.clear()
+        disp.display()
         exit()
 
 if __name__ == "__main__":
